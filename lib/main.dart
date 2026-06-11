@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'src/features/weather/presentation/screens/weather_screen.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'src/features/weather/presentation/providers/saved_locations_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   final sharedPrefs = await SharedPreferences.getInstance();
 
   runApp(

@@ -23,17 +23,29 @@ Một ứng dụng dự báo thời tiết đẹp mắt, mượt mà và hoạt 
 
 ## 📁 Cấu trúc thư mục dự án
 
-Dự án tuân theo chuẩn **Feature-First Clean Architecture** (Kiến trúc Sạch chia theo Tính năng):
+Dự án tuân theo chuẩn **Kiến trúc Sạch (Clean Architecture)** được chia theo từng tính năng (Feature-first). Việc chia nhỏ này giúp mã nguồn dễ đọc, dễ bảo trì và tái sử dụng:
 
 ```text
 lib/
-├── src/
-│   └── features/
-│       └── weather/
-│           ├── data/             # Models, Data Sources (Remote/Local), Repositories Impl
-│           ├── domain/           # Entities, Repositories Interfaces, Use Cases
-│           └── presentation/     # Screens, Widgets, Riverpod Providers
-└── main.dart
+├── main.dart                     # Điểm bắt đầu (Entry point) khởi chạy ứng dụng
+└── src/
+    ├── core/                     # Chứa các thành phần cốt lõi dùng chung cho toàn dự án
+    │   ├── error/                # Các class định nghĩa lỗi (Failure, Exceptions)
+    │   └── utils/                # Các hằng số (Constants), cấu hình chung (API Key, Base URL)
+    └── features/
+        └── weather/              # Tính năng thời tiết (chia theo mô hình Clean Architecture)
+            ├── data/             # TẦNG DỮ LIỆU: Quản lý việc lấy và xử lý dữ liệu thô
+            │   ├── datasources/  #   - Nơi gọi API (http) hoặc đọc từ bộ nhớ tạm (SharedPreferences)
+            │   ├── models/       #   - Nơi chứa các class phục vụ parse JSON từ API (Kế thừa Entities)
+            │   └── repositories/ #   - Nơi triển khai (Implementation) các logic lấy dữ liệu cụ thể
+            ├── domain/           # TẦNG NGHIỆP VỤ: Trái tim của ứng dụng, không phụ thuộc vào framework
+            │   ├── entities/     #   - Các đối tượng dữ liệu thuần túy (Weather, Forecast, Location)
+            │   ├── repositories/ #   - Các Interface (hợp đồng) định nghĩa phương thức lấy dữ liệu
+            │   └── usecases/     #   - Nơi chứa logic nghiệp vụ cụ thể (Ví dụ: GetWeatherUseCase)
+            └── presentation/     # TẦNG GIAO DIỆN: Nơi hiển thị thông tin và tương tác với người dùng
+                ├── providers/    #   - Các file quản lý trạng thái bằng Riverpod (Riverpod State)
+                ├── screens/      #   - Các màn hình UI của ứng dụng (WeatherScreen, LocationScreen)
+                └── utils/        #   - Các tiện ích nhỏ dành riêng cho UI (như helper cho animation Lottie)
 ```
 
 ## 🚀 Hướng dẫn cài đặt

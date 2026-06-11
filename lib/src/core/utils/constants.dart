@@ -1,5 +1,12 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class Constants {
-  // TODO: Replace with your actual OpenWeatherMap API key.
-  static const String openWeatherMapApiKey = 'YOUR_API_KEY_HERE';
+  // Read API Key from .env file
+  static String get openWeatherMapApiKey {
+    if (dotenv.isInitialized) {
+      return dotenv.env['OPEN_WEATHER_API_KEY'] ?? '';
+    }
+    return 'test_api_key'; // Fallback for unit tests
+  }
   static const String openWeatherMapBaseUrl = 'api.openweathermap.org';
 }
