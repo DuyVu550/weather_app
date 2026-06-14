@@ -1,0 +1,56 @@
+# FILE CẤU HÌNH QUY ƯỚC DỰ ÁN DÀNH CHO AI VÀ DEVELOPER
+# Tên file: analysis-options.yaml
+
+project_overview:
+  title: "Weather App"
+  description: "Ứng dụng thời tiết cung cấp thông tin dự báo thời tiết hiện tại và các ngày tiếp theo. Có tính năng lấy vị trí hiện tại của thiết bị hoặc xem thời tiết theo vị trí được lưu trữ."
+
+directory_structure:
+  pattern: "Clean Architecture theo hướng Feature-first"
+  details:
+    - lib/src/core/: "Chứa các thành phần dùng chung toàn dự án (xử lý lỗi, network, theme, utilities)."
+    - lib/src/features/: "Chứa các tính năng chính của ứng dụng."
+    - lib/src/features/weather/data/: "Tầng Data - Chứa DataSources (gọi API, lấy vị trí), Models (parse JSON) và phần triển khai (implementation) của Repositories."
+    - lib/src/features/weather/domain/: "Tầng Domain - Chứa Entities (thực thể lõi), định nghĩa Repositories (Interfaces) và UseCases (logic nghiệp vụ)."
+    - lib/src/features/weather/presentation/: "Tầng Presentation - Chứa UI (Widgets, Pages), State Management (các Riverpod Providers) và tiện ích UI."
+
+tech_stack:
+  framework: "Flutter & Dart"
+  state_management: "flutter_riverpod"
+  network: "http"
+  location: "geolocator"
+  animations: "lottie"
+  local_storage: "shared_preferences"
+  environment: "flutter_dotenv"
+
+important_processing_flow:
+  steps:
+    - step_1: "Người dùng thao tác trên giao diện (Tầng Presentation)."
+    - step_2: "Riverpod Notifier/Provider nhận sự kiện từ UI và gọi UseCase tương ứng (Tầng Domain)."
+    - step_3: "UseCase thực thi logic nghiệp vụ và giao tiếp với Repository Interface (Tầng Domain)."
+    - step_4: "Repository Implementation (Tầng Data) quyết định lấy dữ liệu từ đâu (API hoặc Local)."
+    - step_5: "DataSource thực hiện gọi API qua mạng hoặc truy xuất ổ đĩa cục bộ để lấy dữ liệu."
+    - step_6: "Dữ liệu trả về từ DataSource (dạng Model) được chuyển đổi thành Entity và truyền ngược lên UseCase."
+    - step_7: "Kết quả cuối cùng cập nhật vào State của Provider, làm UI rebuild và hiển thị thông tin hoặc animation."
+
+important_modules_to_note:
+  - file: "lib/src/features/weather/domain/usecases/get_forecast_usecase.dart"
+    note: "Nơi chứa logic chính xử lý luồng lấy dữ liệu thời tiết."
+  - file: "lib/src/features/weather/domain/repositories/weather_repository.dart"
+    note: "Interface quy định hợp đồng giao tiếp giữa Domain và Data."
+  - file: "lib/src/features/weather/data/datasources/location_datasource.dart"
+    note: "Xử lý việc cấp quyền và lấy vị trí (tọa độ) hiện tại của thiết bị."
+  - file: "lib/src/features/weather/presentation/utils/weather_animation_helper.dart"
+    note: "Hỗ trợ ánh xạ và hiển thị các hiệu ứng Lottie phù hợp với điều kiện thời tiết."
+  - file: "lib/src/features/weather/domain/entities/forecast.dart"
+    note: "Thực thể đại diện cho dữ liệu dự báo thời tiết sau khi đã được chuẩn hóa."
+
+coding_conventions:
+  core_rule: "CỐT LÕI: Mọi đoạn code phải cực kỳ dễ đọc, sử dụng cấu trúc cơ bản nhất. Không dùng các kiểu code rút gọn."
+  rules:
+    - rule_1: "KHÔNG dùng cú pháp rút gọn hoặc lồng ghép quá mức. Tuyệt đối KHÔNG dùng toán tử ba ngôi (ternary operator) lồng nhau."
+    - rule_2: "SỬ DỤNG cấu trúc cơ bản: Luôn dùng if/else, vòng lặp for, while thông thường."
+    - rule_3: "KHÔNG dùng arrow function (=>) cho các hàm có logic phức tạp. Hãy dùng khối block { } để viết tuần tự, tường minh."
+    - rule_4: "Tên biến, tên hàm, tên class phải là tiếng Anh, ghi rõ ràng mục đích (VD: fetchWeatherData thay vì fetchDt)."
+    - rule_5: "Luôn bọc try-catch tường minh khi có các thao tác gọi API hoặc truy xuất local storage."
+    - rule_6: "Tuân thủ nghiêm ngặt ranh giới Clean Architecture: Không import file từ tầng Data vào tầng Presentation. Chỉ giao tiếp thông qua tầng Domain."
