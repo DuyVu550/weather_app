@@ -13,9 +13,15 @@
 class WeatherAnimationHelper {
   WeatherAnimationHelper._();
 
-  /// Trả về đường dẫn asset của Lottie JSON tương ứng với [iconCode].
-  static String assetPathFromIconCode(String iconCode) {
+  /// Trả về đường dẫn asset của Lottie JSON tương ứng với [iconCode] và [description] (tùy chọn).
+  static String assetPathFromIconCode(String iconCode, [String? description]) {
     final code = iconCode.replaceAll(RegExp(r'[dn]$'), ''); // bỏ suffix d/n
+    final isHail = description != null && 
+        (description.toLowerCase().contains('hail') || description.toLowerCase().contains('mưa đá'));
+    
+    if (isHail) {
+      return 'assets/animations/hail.json';
+    }
     switch (code) {
       case '01':
         return iconCode.endsWith('n')

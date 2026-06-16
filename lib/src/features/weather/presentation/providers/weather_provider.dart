@@ -51,40 +51,27 @@ final getForecastUseCaseProvider = Provider<GetForecastUseCase>((ref) {
 // Weather provider — lắng nghe locationProvider và tự động fetch thời tiết.
 // ---------------------------------------------------------------------------
 
-final weatherProvider = FutureProvider<Weather>((ref) async {
-  // Lấy trạng thái địa điểm đã chọn
+final resolvedLocationProvider = FutureProvider<Location>((ref) async {
   final savedState = ref.watch(savedLocationsProvider);
   
-  Location location;
   if (savedState.selectedLocation != null) {
-    // Dùng vị trí đã chọn
-    location = Location(
+    return Location(
       latitude: savedState.selectedLocation!.latitude,
       longitude: savedState.selectedLocation!.longitude,
     );
   } else {
-    // Dùng GPS
-    location = await ref.watch(locationProvider.future);
+    return await ref.watch(locationProvider.future);
   }
+});
 
+final weatherProvider = FutureProvider<Weather>((ref) async {
+  final location = await ref.watch(resolvedLocationProvider.future);
   final useCase = ref.watch(getWeatherUseCaseProvider);
   return useCase(location);
 });
 
 final forecastProvider = FutureProvider<Forecast>((ref) async {
-  // Lấy trạng thái địa điểm đã chọn tương tự như weatherProvider
-  final savedState = ref.watch(savedLocationsProvider);
-  
-  Location location;
-  if (savedState.selectedLocation != null) {
-    location = Location(
-      latitude: savedState.selectedLocation!.latitude,
-      longitude: savedState.selectedLocation!.longitude,
-    );
-  } else {
-    location = await ref.watch(locationProvider.future);
-  }
-
+  final location = await ref.watch(resolvedLocationProvider.future);
   final useCase = ref.watch(getForecastUseCaseProvider);
   return useCase(location);
 });

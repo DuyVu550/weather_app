@@ -27,8 +27,7 @@ class WeatherRemoteDataSource {
     http.Response response;
     try {
       response = await client.get(uri);
-    } catch (e, stack) {
-      print('DEBUG ERROR in fetchWeather: ${e.toString()}\\n${stack.toString()}');
+    } catch (e) {
       throw const NetworkFailure('Không có kết nối Internet.');
     }
 

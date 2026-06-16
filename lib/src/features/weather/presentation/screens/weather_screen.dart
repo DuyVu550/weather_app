@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:weather_app/src/features/weather/domain/entities/weather.dart';
 
-import '../../domain/entities/weather.dart';
 import '../providers/weather_provider.dart';
+import '../providers/settings_provider.dart';
 import '../utils/weather_animation_helper.dart';
+import '../utils/temperature_utils.dart';
 import 'location_management_screen.dart';
 
 class WeatherScreen extends ConsumerWidget {
@@ -36,7 +38,13 @@ class WeatherScreen extends ConsumerWidget {
                 message: error.toString(),
                 onRetry: () => ref.invalidate(weatherProvider),
               ),
-              data: (weather) => _WeatherDataView(weather: weather),
+              data: (weather) => RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(forecastProvider);
+                  return ref.refresh(weatherProvider.future);
+                },
+                child: _WeatherDataView(weather: weather),
+              ),
             ),
           ),
           // ----------------------------------------------------------------
@@ -45,14 +53,30 @@ class WeatherScreen extends ConsumerWidget {
           Positioned(
             top: MediaQuery.paddingOf(context).top + 8,
             right: 16,
-            child: IconButton(
-              icon: const Icon(Icons.list, color: Colors.white, size: 28),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LocationManagementScreen()),
-                );
-              },
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.thermostat,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                  onPressed: () {
+                    ref.read(settingsProvider.notifier).toggleTemperatureUnit();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.list, color: Colors.white, size: 28),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LocationManagementScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ],
@@ -82,8 +106,7 @@ class _AnimatedBackground extends StatelessWidget {
         const Color(0xFF546e7a),
       ],
       data: (w) {
-        final stops =
-            WeatherAnimationHelper.gradientFromIconCode(w.iconCode);
+        final stops = WeatherAnimationHelper.gradientFromIconCode(w.iconCode);
         return stops.map((s) => Color(s.color)).toList();
       },
     );
@@ -127,9 +150,10 @@ class _LoadingViewState extends State<_LoadingView>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _shimmerAnim = Tween<double>(begin: 0.25, end: 0.7).animate(
-      CurvedAnimation(parent: _shimmerCtrl, curve: Curves.easeInOut),
-    );
+    _shimmerAnim = Tween<double>(
+      begin: 0.25,
+      end: 0.7,
+    ).animate(CurvedAnimation(parent: _shimmerCtrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -144,71 +168,71 @@ class _LoadingViewState extends State<_LoadingView>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-        // Lottie loading animation
-        Lottie.asset(
-          'assets/animations/loading.json',
-          width: 160,
-          height: 160,
-          fit: BoxFit.contain,
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Đang lấy thông tin thời tiết…',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 16,
-            letterSpacing: 0.3,
+          // Lottie loading animation
+          Lottie.asset(
+            'assets/animations/loading.json',
+            width: 160,
+            height: 160,
+            fit: BoxFit.contain,
           ),
-        ),
-        const SizedBox(height: 40),
-        // Skeleton shimmer
-        AnimatedBuilder(
-          animation: _shimmerAnim,
-          builder: (context, _) => Opacity(
-            opacity: _shimmerAnim.value,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
-                children: [
-                  _shimmerBar(width: 180, height: 18),
-                  const SizedBox(height: 20),
-                  _shimmerBar(width: 110, height: 72),
-                  const SizedBox(height: 14),
-                  _shimmerBar(width: 220, height: 16),
-                  const SizedBox(height: 40),
-                  Row(
-                    children: [
-                      Expanded(child: _shimmerBar(height: 90)),
-                      const SizedBox(width: 14),
-                      Expanded(child: _shimmerBar(height: 90)),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(child: _shimmerBar(height: 90)),
-                      const SizedBox(width: 14),
-                      Expanded(child: _shimmerBar(height: 90)),
-                    ],
-                  ),
-                ],
+          const SizedBox(height: 16),
+          const Text(
+            'Đang lấy thông tin thời tiết…',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(height: 40),
+          // Skeleton shimmer
+          AnimatedBuilder(
+            animation: _shimmerAnim,
+            builder: (context, _) => Opacity(
+              opacity: _shimmerAnim.value,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  children: [
+                    _shimmerBar(width: 180, height: 18),
+                    const SizedBox(height: 20),
+                    _shimmerBar(width: 110, height: 72),
+                    const SizedBox(height: 14),
+                    _shimmerBar(width: 220, height: 16),
+                    const SizedBox(height: 40),
+                    Row(
+                      children: [
+                        Expanded(child: _shimmerBar(height: 90)),
+                        const SizedBox(width: 14),
+                        Expanded(child: _shimmerBar(height: 90)),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(child: _shimmerBar(height: 90)),
+                        const SizedBox(width: 14),
+                        Expanded(child: _shimmerBar(height: 90)),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
       ),
     );
   }
 
   Widget _shimmerBar({double? width, double height = 16}) => Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(12),
-        ),
-      );
+    width: width,
+    height: height,
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.18),
+      borderRadius: BorderRadius.circular(12),
+    ),
+  );
 }
 
 // ============================================================================
@@ -236,9 +260,10 @@ class _ErrorViewState extends State<_ErrorView>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
-    _floatAnim = Tween<double>(begin: -10, end: 10).animate(
-      CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut),
-    );
+    _floatAnim = Tween<double>(
+      begin: -10,
+      end: 10,
+    ).animate(CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -315,10 +340,14 @@ class _WeatherDataView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lottieAsset =
-        WeatherAnimationHelper.assetPathFromIconCode(weather.iconCode);
+    final settings = ref.watch(settingsProvider);
+    final lottieAsset = WeatherAnimationHelper.assetPathFromIconCode(
+      weather.iconCode,
+      weather.description,
+    );
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         children: [
@@ -344,7 +373,10 @@ class _WeatherDataView extends ConsumerWidget {
 
                 // Nhiệt độ lớn
                 Text(
-                  '${weather.temperature.round()}°C',
+                  TemperatureUtils.formatTemp(
+                    weather.temperature,
+                    settings.temperatureUnit,
+                  ),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 76,
@@ -369,7 +401,7 @@ class _WeatherDataView extends ConsumerWidget {
 
                 // Cảm giác như
                 Text(
-                  'Cảm giác như ${weather.feelsLike.round()}°C',
+                  'Cảm giác như ${TemperatureUtils.formatTemp(weather.feelsLike, settings.temperatureUnit)}',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.5),
                     fontSize: 13,
@@ -382,10 +414,10 @@ class _WeatherDataView extends ConsumerWidget {
           const SizedBox(height: 20),
 
           // ---- Grid chỉ số phụ ----
-          _buildMetricsGrid(),
+          _buildMetricsGrid(settings.temperatureUnit),
 
           const SizedBox(height: 24),
-          
+
           // ---- Dự báo 5 ngày ----
           const _ForecastList(),
 
@@ -401,7 +433,11 @@ class _WeatherDataView extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.location_on_rounded, color: Colors.white70, size: 18),
+            const Icon(
+              Icons.location_on_rounded,
+              color: Colors.white70,
+              size: 18,
+            ),
             const SizedBox(width: 4),
             Text(
               '${weather.cityName}, ${weather.country}',
@@ -426,7 +462,7 @@ class _WeatherDataView extends ConsumerWidget {
     );
   }
 
-  Widget _buildMetricsGrid() {
+  Widget _buildMetricsGrid(TemperatureUnit tempUnit) {
     final items = [
       _MetricItem(
         lottieAsset: 'assets/animations/drizzle.json',
@@ -444,7 +480,7 @@ class _WeatherDataView extends ConsumerWidget {
       _MetricItem(
         icon: Icons.thermostat_rounded,
         label: 'Cảm giác',
-        value: '${weather.feelsLike.round()}°C',
+        value: TemperatureUtils.formatTemp(weather.feelsLike, tempUnit),
         accentColor: const Color(0xFFffb74d),
       ),
       _MetricItem(
@@ -475,7 +511,15 @@ class _WeatherDataView extends ConsumerWidget {
 
   String _formattedDate() {
     final now = DateTime.now();
-    const days = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
+    const days = [
+      'Thứ Hai',
+      'Thứ Ba',
+      'Thứ Tư',
+      'Thứ Năm',
+      'Thứ Sáu',
+      'Thứ Bảy',
+      'Chủ Nhật',
+    ];
     final dayName = days[(now.weekday - 1) % 7];
     return '$dayName, ${now.day}/${now.month}/${now.year}';
   }
@@ -493,15 +537,16 @@ class _GlassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(28),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
+      child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.22), width: 1.5),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.22),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.15),
@@ -513,7 +558,6 @@ class _GlassCard extends StatelessWidget {
           ),
           child: child,
         ),
-      ),
     );
   }
 }
@@ -548,14 +592,15 @@ class _MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-        child: Container(
+      child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.18), width: 1),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.18),
+              width: 1,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -600,7 +645,6 @@ class _MetricCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }
@@ -618,9 +662,7 @@ class _GlassButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(50),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Material(
+      child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: onPressed,
@@ -630,7 +672,10 @@ class _GlassButton extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(50),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.28), width: 1.5),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.28),
+                  width: 1.5,
+                ),
               ),
               child: Text(
                 label,
@@ -644,7 +689,6 @@ class _GlassButton extends StatelessWidget {
             ),
           ),
         ),
-      ),
     );
   }
 }
@@ -655,7 +699,8 @@ class _ForecastList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final forecastAsync = ref.watch(forecastProvider);
-    
+    final settings = ref.watch(settingsProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -671,8 +716,15 @@ class _ForecastList extends ConsumerWidget {
           ),
         ),
         forecastAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator(color: Colors.white54)),
-          error: (error, _) => Center(child: Text('Lỗi: $error', style: const TextStyle(color: Colors.white70))),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: Colors.white54),
+          ),
+          error: (error, _) => Center(
+            child: Text(
+              'Lỗi: $error',
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ),
           data: (forecast) {
             return SizedBox(
               height: 140,
@@ -687,25 +739,46 @@ class _ForecastList extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           '${item.dateTime.hour.toString().padLeft(2, '0')}:00',
-                          style: const TextStyle(color: Colors.white70, fontSize: 13),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
                         ),
                         Text(
                           '${item.dateTime.day}/${item.dateTime.month}',
-                          style: const TextStyle(color: Colors.white54, fontSize: 11),
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 11,
+                          ),
                         ),
                         const SizedBox(height: 8),
-                        Image.network(item.iconUrl, width: 40, height: 40, errorBuilder: (c, e, s) => const Icon(Icons.cloud, color: Colors.white)),
+                        Image.network(
+                          item.iconUrl,
+                          width: 40,
+                          height: 40,
+                          errorBuilder: (c, e, s) =>
+                              const Icon(Icons.cloud, color: Colors.white),
+                        ),
                         const SizedBox(height: 8),
                         Text(
-                          '${item.temperature.round()}°',
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          TemperatureUtils.formatTemp(
+                            item.temperature,
+                            settings.temperatureUnit,
+                          ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
